@@ -1,0 +1,13 @@
+version: '2'
+services:
+  rancher-users:
+    build: .
+    volumes:
+      - ./os_test/passwd:/etc/passwd-host:rw
+      - ./os_test/shadow:/etc/shadow-host:rw
+      - ./os_test/group:/etc/group-host:rw
+      - ./os_test/sudoers:/etc/sudoers
+      - ./os_test/home:/home
+      - ./:/work
+    env_file:
+      - .env

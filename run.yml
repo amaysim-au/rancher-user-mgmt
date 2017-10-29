@@ -1,0 +1,70 @@
+---
+- hosts: all
+  gather_facts: false
+  connection: local
+  tasks:
+    - name: Fetching host OS files
+      copy:
+        src: "{{ item }}-host"
+        dest: "{{ item }}"
+      with_items:
+        - /etc/passwd
+        - /etc/shadow
+        - /etc/group
+
+    - name: Fetching parameters with /users/
+      shell: "aws ssm describe-parameters --filters 'Key=Name,Values=/users/' | jq --raw-output '.Parameters[].Name'"
+      register: ssm_user_keys
+
+    - name: Fetching users from SSM
+      set_fact: user_item="{{ lookup('ssm', item) }}"
+      with_items: "{{ ssm_user_keys.stdout_lines }}"
+      register: ssm_users
+
+    - name: Convering to user list
+      set_fact:
+        users: "{{ ssm_users.results | map(attribute='ansible_facts.user_item') | list }}"
+
+    - debug: msg="{{users}}"
+
+    - debug: msg="{{ users|selectattr('enabled')|list }}"
+    - debug: msg="{{ users|selectattr('enabled', 'equalto', false)|list }}"
+
+    - name: Allow 'docker' group to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%docker'
+        line: '%docker ALL=(ALL) NOPASSWD: ALL'
+        unsafe_writes: yes
+
+    - name: Creating Users
+      user:
+        name: "{{ item.user }}"
+        groups: docker
+        shell: /bin/bash
+        append: yes
+      with_items: "{{ users|selectattr('enabled')|list }}"
+
+    - name: Set up authorized keys for users
+      authorized_key:
+        user: "{{ item.user }}"
+        key: "{{ item.ssh_public_key }}"
+      with_items: "{{ users|selectattr('enabled')|list }}"
+
+    - name: Disabling Users
+      user:
+        name: "{{ item.user }}"
+        state: absent
+        remove: yes
+      with_items: "{{ users|selectattr('enabled', 'equalto', false)|list }}"
+
+    - name: Applying changes to the host OS files
+      copy:
+        src: "{{ item }}"
+        dest: "{{ item }}-host"
+        unsafe_writes: yes
+      with_items:
+        - /etc/passwd
+        - /etc/shadow
+        - /etc/group
