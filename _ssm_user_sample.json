@@ -1,0 +1,5 @@
+{
+  "user": "firstname.lastname",
+  "enabled": true,
+  "ssh_public_key": "ssh-rsa SOMEPUBLICKEY identifier@somehost"
+}

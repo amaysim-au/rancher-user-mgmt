@@ -46,11 +46,21 @@
         append: yes
       with_items: "{{ users|selectattr('enabled')|list }}"
 
+    - name: Setting Home folder permissions to user
+      file:
+        path: "/home/{{ item.user }}"
+        state: directory
+        owner: "{{ item.user }}"
+        group: "{{ item.user }}"
+        recurse: yes
+      with_items: "{{ users|selectattr('enabled')|list }}"
+
     - name: Set up authorized keys for users
       authorized_key:
         user: "{{ item.user }}"
         key: "{{ item.ssh_public_key }}"
       with_items: "{{ users|selectattr('enabled')|list }}"
+      ignore_errors: yes
 
     - name: Disabling Users
       user:
