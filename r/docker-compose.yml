@@ -1,0 +1,25 @@
+version: '2'
+services:
+  rancher-user-mgmt:
+    privileged: true
+    image: amaysim/rancher-user-mgmt:latest
+    environment:
+      AWS_DEFAULT_REGION: ap-southeast-2
+    stdin_open: true
+    volumes:
+    - /etc/passwd:/etc/passwd-host
+    - /etc/shadow:/etc/shadow-host
+    - /etc/group:/etc/group-host
+    - /etc/sudoers:/etc/sudoers
+    - /home:/home
+    tty: true
+    command:
+    - ansible-playbook
+    - -v
+    - -i
+    - inventory
+    - run.yml
+    labels:
+      io.rancher.container.start_once: 'true'
+      io.rancher.container.pull_image: always
+      io.rancher.scheduler.global: 'true'
