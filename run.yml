@@ -44,6 +44,7 @@
         groups: docker
         shell: /bin/bash
         append: yes
+        password: "*"
       with_items: "{{ users|selectattr('enabled')|list }}"
 
     - name: Setting Home folder permissions to user
