@@ -47,6 +47,11 @@
         password: "*"
       with_items: "{{ users|selectattr('enabled')|list }}"
 
+    - name: Disabling user Rancher remote access
+      file:
+        path: /home/rancher/.ssh/authorized_keys
+        state: absent
+
     - name: Setting Home folder permissions to user
       file:
         path: "/home/{{ item.user }}"
