@@ -11,3 +11,4 @@ services:
       - ./:/work
     env_file:
       - .env
+    command: ansible-playbook -vv -i inventory run.yml
