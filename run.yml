@@ -52,6 +52,11 @@
         path: /home/rancher/.ssh/authorized_keys
         state: absent
 
+    - name: Disabling user ec2-user remote access
+      file:
+        path: /home/ec2-user/.ssh/authorized_keys
+        state: absent
+
     - name: Setting Home folder permissions to user
       file:
         path: "/home/{{ item.user }}"
